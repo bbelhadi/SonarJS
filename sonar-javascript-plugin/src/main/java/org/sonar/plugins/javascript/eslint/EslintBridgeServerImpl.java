@@ -119,7 +119,7 @@ public class EslintBridgeServerImpl implements EslintBridgeServer {
         }
       })
       .pathResolver(bundle)
-      .minNodeVersion(10)
+      .minNodeVersion(8)
       .configuration(context.config())
       .script(scriptFile.getAbsolutePath())
       .scriptArgs(String.valueOf(port), bundles);
