@@ -61,11 +61,12 @@ public class EslintBridgeServerImplTest {
 
   private SensorContextTester context;
   private EslintBridgeServerImpl eslintBridgeServer;
-  private TestBundle testBundle = new TestBundle(START_SERVER_SCRIPT);
+  private final TestBundle testBundle = new TestBundle(START_SERVER_SCRIPT);
 
   @Before
   public void setUp() throws Exception {
     context = SensorContextTester.create(tempFolder.newDir());
+    context.fileSystem().setWorkDir(tempFolder.newDir().toPath());
   }
 
   @After
@@ -249,6 +250,7 @@ public class EslintBridgeServerImplTest {
     eslintBridgeServer.deploy();
     Path baseDir = tempFolder.newDir().toPath();
     SensorContextTester ctx = SensorContextTester.create(baseDir);
+    ctx.fileSystem().setWorkDir(tempFolder.newDir().toPath());
     Path tsDir = baseDir.resolve("dir/node_modules/typescript");
     Files.createDirectories(tsDir);
     eslintBridgeServer.startServer(ctx, emptyList());
