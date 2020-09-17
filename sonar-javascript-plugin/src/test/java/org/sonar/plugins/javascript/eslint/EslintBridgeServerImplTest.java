@@ -33,6 +33,7 @@ import org.sonar.api.batch.sensor.internal.SensorContextTester;
 import org.sonar.api.config.internal.MapSettings;
 import org.sonar.api.utils.internal.JUnitTempFolder;
 import org.sonar.api.utils.log.LogTester;
+import org.sonar.plugins.javascript.api.RulesBundle;
 import org.sonar.plugins.javascript.eslint.EslintBridgeServer.AnalysisRequest;
 import org.sonarsource.nodejs.NodeCommand;
 import org.sonarsource.nodejs.NodeCommandBuilder;
@@ -62,6 +63,8 @@ public class EslintBridgeServerImplTest {
   private SensorContextTester context;
   private EslintBridgeServerImpl eslintBridgeServer;
   private final TestBundle testBundle = new TestBundle(START_SERVER_SCRIPT);
+
+  private final RulesBundles emptyRulesBundles = new RulesBundles(new RulesBundle[] {}, tempFolder);
 
   @Before
   public void setUp() throws Exception {
@@ -99,7 +102,7 @@ public class EslintBridgeServerImplTest {
       }
     });
 
-    eslintBridgeServer = new EslintBridgeServerImpl(nodeCommandBuilder, TEST_TIMEOUT_SECONDS, testBundle);
+    eslintBridgeServer = new EslintBridgeServerImpl(nodeCommandBuilder, TEST_TIMEOUT_SECONDS, testBundle, emptyRulesBundles);
     eslintBridgeServer.deploy();
 
     assertThatThrownBy(() -> eslintBridgeServer.startServer(context, emptyList()))
@@ -198,7 +201,7 @@ public class EslintBridgeServerImplTest {
   public void test_isAlive() throws Exception {
     eslintBridgeServer = createEslintBridgeServer(START_SERVER_SCRIPT);
     assertThat(eslintBridgeServer.isAlive()).isFalse();
-    eslintBridgeServer.startServerLazily(context, emptyList());
+    eslintBridgeServer.startServerLazily(context);
     assertThat(eslintBridgeServer.isAlive()).isTrue();
     eslintBridgeServer.clean();
     assertThat(eslintBridgeServer.isAlive()).isFalse();
@@ -209,11 +212,11 @@ public class EslintBridgeServerImplTest {
     String alreadyStarted = "eslint-bridge server is up, no need to start.";
     String starting = "Starting Node.js process to start eslint-bridge server at port";
     eslintBridgeServer = createEslintBridgeServer("startServer.js");
-    eslintBridgeServer.startServerLazily(context, emptyList());
+    eslintBridgeServer.startServerLazily(context);
     assertThat(logTester.logs(DEBUG).stream().anyMatch(s -> s.startsWith(starting))).isTrue();
     assertThat(logTester.logs(DEBUG)).doesNotContain(alreadyStarted);
     logTester.clear();
-    eslintBridgeServer.startServerLazily(context, emptyList());
+    eslintBridgeServer.startServerLazily(context);
     assertThat(logTester.logs(DEBUG).stream().noneMatch(s -> s.startsWith(starting))).isTrue();
     assertThat(logTester.logs(DEBUG)).contains(alreadyStarted);
   }
@@ -222,11 +225,11 @@ public class EslintBridgeServerImplTest {
   public void should_throw_special_exception_when_failed_already() throws Exception {
     eslintBridgeServer = createEslintBridgeServer("throw.js");
     String failedToStartExceptionMessage = "Failed to start server (" + TEST_TIMEOUT_SECONDS + "s timeout)";
-    assertThatThrownBy(() -> eslintBridgeServer.startServerLazily(context, emptyList()))
+    assertThatThrownBy(() -> eslintBridgeServer.startServerLazily(context))
       .isInstanceOf(NodeCommandException.class)
       .hasMessage(failedToStartExceptionMessage);
 
-    assertThatThrownBy(() -> eslintBridgeServer.startServerLazily(context, emptyList()))
+    assertThatThrownBy(() -> eslintBridgeServer.startServerLazily(context))
       .isInstanceOf(ServerAlreadyFailedException.class);
   }
 
@@ -234,7 +237,7 @@ public class EslintBridgeServerImplTest {
   public void should_fail_if_bad_json_response() throws Exception {
     eslintBridgeServer = createEslintBridgeServer("badResponse.js");
     eslintBridgeServer.deploy();
-    eslintBridgeServer.startServerLazily(context, emptyList());
+    eslintBridgeServer.startServerLazily(context);
 
     DefaultInputFile inputFile = TestInputFileBuilder.create("foo", "foo.js")
       .setContents("alert('Fly, you fools!')")
@@ -342,7 +345,7 @@ public class EslintBridgeServerImplTest {
   }
 
   private EslintBridgeServerImpl createEslintBridgeServer(String startServerScript) {
-    return new EslintBridgeServerImpl(NodeCommand.builder(), TEST_TIMEOUT_SECONDS, new TestBundle(startServerScript));
+    return new EslintBridgeServerImpl(NodeCommand.builder(), TEST_TIMEOUT_SECONDS, new TestBundle(startServerScript), emptyRulesBundles);
   }
 
   static class TestBundle implements Bundle {

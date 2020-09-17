@@ -68,7 +68,6 @@ import org.sonar.api.utils.log.LogTester;
 import org.sonar.api.utils.log.LoggerLevel;
 import org.sonar.javascript.checks.CheckList;
 import org.sonar.plugins.javascript.TypeScriptChecks;
-import org.sonar.plugins.javascript.api.RulesBundle;
 import org.sonar.plugins.javascript.eslint.EslintBridgeServer.AnalysisRequest;
 import org.sonar.plugins.javascript.eslint.EslintBridgeServer.AnalysisResponse;
 import org.sonar.plugins.javascript.eslint.EslintBridgeServer.ParsingErrorCode;
@@ -473,7 +472,7 @@ public class TypeScriptSensorTest {
       fileLinesContextFactory,
       eslintBridgeServerMock,
       analysisWarningsMock,
-      tempFolder, new RulesBundles(new RulesBundle[]{}, tempFolder));
+      tempFolder);
   }
 
   private AnalysisResponse createResponse() {
